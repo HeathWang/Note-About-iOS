@@ -9,8 +9,11 @@ SDImageCache maintains a memory cache and an optional disk cache. Disk cache wri
 SDImageCache作为SDWebImage当中的缓存类，提供了磁盘缓存以及内存缓存。
 SDImageCache一般直接用作单例来使用，初始化时几个重要属性：**memCache**用作内存缓存，**ioQueue**是用作写入磁盘的队列，另外需要根据namespace来生成**diskCachePath**。初始化NSFileManager用于操作文件读写处理，添加Observer用于监听app内存警告、app关闭，app进入后台的notification。
 
+
 ####核心方法
 SDImageCache核心的方法有针对图片的**存储**和**读取**。
+
+
 ###### 存储
 
 ```Objective-C
@@ -54,11 +57,13 @@ SDImageCache核心的方法有针对图片的**存储**和**读取**。
     }
 }
 ```
+
 图片存储最终都调用到这个方法：
-    1. 首先根据单例中的缓存配置看是否应该将图片缓存在内存。
-    2. 判断是否存入磁盘，是的话在串行的ioQueue中执行存入磁盘操作。
-    3. 如果没有将图片转为data，会根据是否是包含`alpha channel`来辨别是PNG OR JPEG。然后调用SDWebImageCodersManager来encode image to NSData。之后写入磁盘。
-    4. 在主线程执行完成的completionBlock。
+
+1. 首先根据单例中的缓存配置看是否应该将图片缓存在内存。
+2. 判断是否存入磁盘，是的话在串行的ioQueue中执行存入磁盘操作。
+3. 如果没有将图片转为data，会根据是否是包含`alpha channel`来辨别是PNG OR JPEG。然后调用SDWebImageCodersManager来encode image to NSData。之后写入磁盘。
+4. 在主线程执行完成的completionBlock。
 
 
 对于写入数据没有什么好说的，每次都会判断写入的folder是否存在，no，创建folder，然后写入
@@ -96,17 +101,21 @@ SDImageCache核心的方法有针对图片的**存储**和**读取**。
 * 内存和磁盘缓存的单独清理没有什么亮点可说，需要注意的时磁盘的读写操作均在ioQueue的串行队列中完成。
 * 比较复杂的是`- (void)deleteOldFiles`方法，该方法会最终调用`- (void)deleteOldFilesWithCompletionBlock:(nullable SDWebImageNoParamsBlock)completionBlock`方法：
 
+
     1.首先遍历磁盘缓存文件夹下所有的缓存文件，获取文件的**修改时间**，**文件大小**。         
     2.根据配置的最大缓存时间（默认一周）取得文件失效时间_expirationDate_。
     3.遍历文件属性数组，如果文件的修改时间小于设置的失效时间，加入删除数组，大于的话，就把数据加入到缓存的字典里，并且累加未删除图片的总大小。
     4.执行删除操作，之后判断maxCacheSize是否小于当前未删除图片的总大小，如果是，继续执行删除操作，需要删除maxCacheSize/2的容量文件。
     5.对未删除的缓存文件修改时间进行排序，时间旧的在最前，执行遍历删除操作直到缓存文件总大小小于配置的maxCacheSize/2。
 
+
 ##SDWebImageDownloader
 SDWebImageDownloader作为SDWebImageManager核心类初始化时必传入的一个参数之一，主要用于管理下载图片。
+
 `
 Asynchronous downloader dedicated and optimized for image loading.
 `
+
 ####初始化
 SDWebImageDownloader几个重要的属性：
 
@@ -133,6 +142,7 @@ if (sself.executionOrder == SDWebImageDownloaderLIFOExecutionOrder) {
 ```
 * 最大并行数默认为6，默认下载超时15s。
 * 栅栏队列用于处理字典**URLOperations**添加删除操作。
+
 
 ####核心方法流程
 
