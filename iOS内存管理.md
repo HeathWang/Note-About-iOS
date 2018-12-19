@@ -34,7 +34,12 @@ Xcode的Instruments-Leaks可以检测。
 # iOS中的block
 参照掘金文章：
 [iOS底层原理总结 - 探寻block的本质（一）](https://juejin.im/post/5b0181e15188254270643e88)
+
 [iOS底层原理总结 - 探寻block的本质（二）](https://juejin.im/post/5b0d026bf265da090e3decb7)
+
+[__block修饰的原理](https://www.jianshu.com/p/404ff9d3cd42)
+
+[iOS Block详解](http://www.imlifengfeng.com/blog/?utm_medium=email&utm_source=gank.io&p=457)
 
 ## block修改外部变量为什么要用__block ？
 
@@ -55,6 +60,15 @@ int main(int argc, const char * argv[]) {
 默认情况下block不能修改外部的局部变量。通过之前对源码的分析可以知道。
 
 age是在main函数内部声明的，说明**_age的内存存在于main函数的栈空间内部_**，但是block内部的代码在__main_block_func_0函数内部。__main_block_func_0函数内部无法访问age变量的内存空间，**两个函数的栈空间不一样**，__main_block_func_0内部拿到的age是block结构体内部的age，因此无法在__main_block_func_0函数内部去修改main函数内部的变量。
+
+> 个人理解：block外部的变量，对于基础数据类型，默认是值拷贝；对于对象，是指针拷贝到block内部的堆中。而Block不允许修改外部变量的值，这里所说的外部变量的值，指的是栈中指针的内存地址。也就是说不用__block 修饰的变量，在block内部和外部，一个在堆中，一个在栈中，所以无法修改。__block的作用，就是把栈中的内容拷贝到堆中，实现内存一致性，就可以修改。
+
+其他引用：
+> 我们都知道：**Block不允许修改外部变量的值**，这里所说的外部变量的值，指的是栈中指针的内存地址。__block 所起到的作用就是只要观察到该变量被 block 所持有，就将“外部变量”在栈中的内存地址放到了堆中。进而在block内部也可以修改外部变量的值。
+
+Apple的设计如此：**Block不允许修改外部变量的值**！
+> 应该是考虑到了block的特殊性，block也属于“函数”的范畴，变量进入block，实际就是已经改变了作用域。在几个作用域之间进行切换时，如果不加上这样的限制，变量的可维护性将大大降低。又比如我想在block内声明了一个与外部同名的变量，此时是允许呢还是不允许呢？只有加上了这样的限制，这样的情景才能实现。
+
 
 如何解决？
 1. age使用static修饰。

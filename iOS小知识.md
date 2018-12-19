@@ -194,6 +194,23 @@ NSArray *trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyed
 [mutableObject copy] //单层深复制
 [mutableObject mutableCopy] //单层深复制
 
+## property中使用copy需要注意的
+
+
+```Objective-C
+@property (nonatomic, copy) NSMutableArray *list;
+@property (nonatomic, copy) NSMutableString *testStr;
+```
+
+例如上面的代码，如果使用了copy，当我们对属性赋值后，其实它们变成了不可变对象。
+
+在上面的话题中，我们看到对mutable对象使用copy，实际上是单层的深复制，内存地址变化了，而且**由mutable变成了不可变**。这一点以前没有注意到。
+
+那么如何处理上面这种问题呢？
+1. mutable使用strong修饰，因为mutable的目的是为了可变的，而copy本质上是为了保持不可变！
+2. 重写属性的Sett方法，使用mutableCopy来解决。
+
+
 
 ## apple用什么方式实现对一个对象的KVO？
 Apple 的文档对 KVO 实现的描述：
@@ -314,6 +331,18 @@ KVO 在实现中通过 `isa 混写（isa-swizzling）` 把这个对象的 isa �
 
 ## 线程锁几种方式
 [iOS中保证线程安全的几种方式与性能对比](https://www.jianshu.com/p/938d68ed832c#)
+
+## iOS中的静态库和动态库
+
+* 动态库形式： .dylib和.framework
+* 静态库形式： .a和.framework
+
+动态库和静态库的区别：
+1. 静态库：链接时，静态库会被完整地复制到可执行文件中，被多次使用就有多份冗余拷贝。
+2. 系统动态库：链接时不复制，程序运行时由系统动态加载到内存，供程序调用，系统只加载一次，多个程序共用，节省内存。
+
+![101810-24cd90dffd5c68fe](media/15246699179425/101810-24cd90dffd5c68fe.png)
+
 
 
 
